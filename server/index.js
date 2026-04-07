@@ -107,10 +107,14 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ─── Start Server ─────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`\n🚀 Nio Tea Server running on http://localhost:${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`   Admin Panel:  http://localhost:${PORT}/api/admin\n`);
-});
+// ─── Start Server (local dev only — Vercel uses module.exports) ──────────────
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Nio Tea Server running on http://localhost:${PORT}`);
+    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`   Admin Panel:  http://localhost:${PORT}/api/admin\n`);
+  });
+}
+
+module.exports = app;
