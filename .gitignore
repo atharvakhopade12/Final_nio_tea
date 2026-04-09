@@ -10,3 +10,15 @@ Thumbs.db
 server/uploads/content/
 client/dist/
 .venv/
+
+# Large media files in root
+*.mp4
+*.MP4
+*.jpg
+*.jpeg
+*.png
+!client/public/*.mp4
+!client/public/*.jpg
+!client/public/*.jpeg
+!client/public/*.png
+!client/public/*.svg
