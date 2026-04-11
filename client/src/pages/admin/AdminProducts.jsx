@@ -17,6 +17,18 @@ const empty = {
   images: [],
 };
 
+const SUPPORTED_FORMATS = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/jpg',
+  'image/gif',
+  'image/svg+xml',
+  'image/avif',
+  'image/bmp',
+  'image/tiff',
+];
+
 // Image crop helper
 const getCroppedImg = (image, crop) => {
   const canvas = document.createElement('canvas');
@@ -89,12 +101,37 @@ export default function AdminProducts() {
 
   // Image upload flow
   const onFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => { setImgSrc(reader.result); setShowCrop(true); };
-    reader.readAsDataURL(file);
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+
+  const validFiles = [];
+  const invalidFiles = [];
+
+  files.forEach((file) => {
+    if (SUPPORTED_FORMATS.includes(file.type)) {
+      validFiles.push(file);
+    } else {
+      invalidFiles.push(file.name);
+    }
+  });
+
+  if (invalidFiles.length) {
+    toast.error(`Unsupported files: ${invalidFiles.join(', ')}`);
+  }
+
+  if (!validFiles.length) return;
+
+  // Continue with valid files
+  setPendingFiles(validFiles);
+
+  // Optional: crop only first image
+  const reader = new FileReader();
+  reader.onload = () => {
+    setImgSrc(reader.result);
+    setShowCrop(true);
   };
+  reader.readAsDataURL(validFiles[0]);
+};
 
   const onImageLoad = (e) => {
     const { width, height } = e.currentTarget;
