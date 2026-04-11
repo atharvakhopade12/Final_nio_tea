@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      serverless-http:
+        specifier: ^4.0.0
+        version: 4.0.0
     devDependencies:
       npm-run-all:
         specifier: ^4.1.5
@@ -401,6 +405,10 @@ packages:
   semver@5.7.2:
     resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
     hasBin: true
+
+  serverless-http@4.0.0:
+    resolution: {integrity: sha512-KKl9h1+VApX9y2vHsVMogf906UXBwO3FDYiWPzqS0mCjEEx4Sx91JrssbWA7RN43HBuxrtoh8MkocZPvjyGnLg==}
+    engines: {node: '>=12.0'}
 
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
@@ -1038,6 +1046,8 @@ snapshots:
       is-regex: 1.2.1
 
   semver@5.7.2: {}
+
+  serverless-http@4.0.0: {}
 
   set-function-length@1.2.2:
     dependencies:
