@@ -110,11 +110,13 @@ export default function AdminLogin() {
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-nio-cream rounded-xl text-xs text-gray-500 border border-nio-green-100">
-            <p className="font-medium text-nio-green-800 mb-1">Default credentials (change after first login):</p>
-            <p>Email: admin@niotea.com</p>
-            <p>Password: Admin@123</p>
-          </div>
+          {import.meta.env.DEV && (
+            <div className="mt-6 p-4 bg-nio-cream rounded-xl text-xs text-gray-500 border border-nio-green-100">
+              <p className="font-medium text-nio-green-800 mb-1">Development defaults:</p>
+              <p>Email: admin@niotea.com</p>
+              <p>Password: Admin@123</p>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
