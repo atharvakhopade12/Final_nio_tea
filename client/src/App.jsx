@@ -13,6 +13,7 @@ import ProductDetail from './pages/ProductDetail';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Rebranding from './pages/Rebranding';
+import SEOManager from './components/seo/SEOManager';
 
 // Layout
 import MainLayout from './components/layout/MainLayout';
@@ -24,6 +25,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <SEOManager />
       <AuthProvider>
         <Toaster
           position="top-right"

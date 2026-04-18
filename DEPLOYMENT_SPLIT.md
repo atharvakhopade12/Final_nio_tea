@@ -50,6 +50,7 @@ Environment variables:
 - `VITE_API_URL=https://<render-domain>`
 - `VITE_SUPABASE_URL=<supabase-project-url>`
 - `VITE_SUPABASE_ANON_KEY=<supabase-anon-key>`
+- `VITE_SITE_URL=https://<public-vercel-or-custom-domain>`
 
 The file `client/vercel.json` is already included for SPA rewrites.
 
@@ -77,7 +78,17 @@ After both Vercel deployments finish:
 2. Put admin URL into Render `ADMIN_URL`.
 3. Redeploy Render once.
 
-## 5) Local development
+## 5) SEO checks (public site)
+
+- Ensure `VITE_SITE_URL` points to the final public domain.
+- Redeploy the public Vercel project after `VITE_SITE_URL` changes.
+- Confirm these URLs work:
+	- `https://<public-domain>/robots.txt`
+	- `https://<public-domain>/sitemap.xml`
+- Submit sitemap to Google Search Console.
+- Keep admin subdomain non-indexed (`Disallow: /` in admin `robots.txt`).
+
+## 6) Local development
 
 Install all:
 
