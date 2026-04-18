@@ -1,11 +1,15 @@
 /**
  * OTP Sender Utility
- * Supports: MSG91 or Dev Mock
- * Set OTP_PROVIDER in .env to switch between providers
+ * Uses MSG91 when MSG91 env vars are configured,
+ * otherwise falls back to development mock mode.
  */
 
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+const isMSG91Configured = () => {
+  return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID);
 };
 
 // ─── MSG91 Provider ──────────────────────────────────────────────────────────
@@ -63,21 +67,17 @@ const sendViaMock = async (phone, otp) => {
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
 const sendOTP = async (phone, otp) => {
-  const provider = process.env.OTP_PROVIDER || 'msg91';
-
-  switch (provider) {
-    case 'msg91':
-      await sendViaMSG91(phone, otp);
-      break;
-    default:
-      await sendViaMock(phone, otp);
+  if (isMSG91Configured()) {
+    await sendViaMSG91(phone, otp);
+    return { provider: 'msg91' };
   }
+
+  await sendViaMock(phone, otp);
+  return { provider: 'mock' };
 };
 
 const verifyOTPWithProvider = async (phone, otp, expectedOtp) => {
-  const provider = process.env.OTP_PROVIDER || 'msg91';
-
-  if (provider === 'msg91') {
+  if (isMSG91Configured()) {
     return verifyViaMSG91(phone, otp);
   }
 
@@ -85,4 +85,4 @@ const verifyOTPWithProvider = async (phone, otp, expectedOtp) => {
   return { ok: otp === expectedOtp, message: 'Invalid OTP. Please try again.' };
 };
 
-module.exports = { generateOTP, sendOTP, verifyOTPWithProvider };
+module.exports = { generateOTP, sendOTP, verifyOTPWithProvider, isMSG91Configured };

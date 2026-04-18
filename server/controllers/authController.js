@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
-const { generateOTP, sendOTP, verifyOTPWithProvider } = require('../utils/sendOTP');
+const { generateOTP, sendOTP, verifyOTPWithProvider, isMSG91Configured } = require('../utils/sendOTP');
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
@@ -59,15 +59,23 @@ const sendOTPHandler = async (req, res) => {
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
   await OTP.create({ phone, otp, purpose, expiresAt });
-  await sendOTP(phone, otp);
+  const { provider } = await sendOTP(phone, otp);
+  const usingMSG91 = provider === 'msg91' && isMSG91Configured();
 
-  res.status(200).json({
+  const response = {
     success: true,
-    message: `OTP sent to ${phone}`,
+    message: usingMSG91
+      ? `OTP sent to ${phone}`
+      : `OTP generated for ${phone} (dev mode).`,
     purpose: 'register',
     requiresOTP: true,
-    devOTP: otp,
-  });
+  };
+
+  if (!usingMSG91) {
+    response.devOTP = otp;
+  }
+
+  res.status(200).json(response);
 };
 
 // @desc    Verify OTP and authenticate
