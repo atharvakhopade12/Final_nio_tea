@@ -91,8 +91,23 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.ADMIN_URL,
+  'http://localhost:5173',
+  'http://localhost:5174',
+].filter(Boolean);
+
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    // Allow non-browser clients (health checks, curl, server-side calls)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+
+    const err = new Error(`CORS blocked for origin: ${origin}`);
+    err.statusCode = 403;
+    return callback(err);
+  },
   credentials: true,
 }));
 

@@ -5,6 +5,8 @@ import { HiViewGrid, HiShoppingBag, HiUsers, HiPencil, HiLogout, HiMenu, HiChevr
 import { useAdmin } from '../../context/AdminContext';
 import { adminAPI } from '../../api/axios';
 
+const PUBLIC_SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL || 'http://localhost:5173';
+
 const BASE_LINKS = [
   { to: '/admin/dashboard',   icon: HiViewGrid,    label: 'Dashboard' },
   { to: '/admin/products',    icon: HiShoppingBag, label: 'Products' },
@@ -119,7 +121,7 @@ export default function AdminLayout() {
                 <HiShieldCheck className="w-3.5 h-3.5" /> Superadmin
               </span>
             )}
-            <a href="/" target="_blank" rel="noopener noreferrer"
+            <a href={PUBLIC_SITE_URL} target="_blank" rel="noopener noreferrer"
               className="text-sm text-nio-green-700 hover:text-nio-green-900 font-medium px-3 py-1.5 rounded-lg hover:bg-nio-green-50 transition-colors">
               View Site
             </a>

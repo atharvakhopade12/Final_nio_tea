@@ -28,5 +28,7 @@ services:
         sync: false
       - key: CLIENT_URL
         sync: false
+      - key: ADMIN_URL
+        sync: false
       - key: OTP_PROVIDER
         value: mock
