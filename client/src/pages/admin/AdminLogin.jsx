@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
@@ -9,10 +9,22 @@ export default function AdminLogin() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
-  const { login, isAdmin }      = useAdmin();
+  const { login, isAdmin, loading: checkingAuth } = useAdmin();
   const navigate                = useNavigate();
 
-  if (isAdmin) { navigate('/admin/dashboard'); return null; }
+  useEffect(() => {
+    if (!checkingAuth && isAdmin) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [checkingAuth, isAdmin, navigate]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-nio-green-950 flex items-center justify-center px-4">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

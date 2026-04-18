@@ -9,12 +9,40 @@ export const AdminProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('nio_admin_token');
-    const stored = localStorage.getItem('nio_admin');
-    if (token && stored) {
-      try { setAdmin(JSON.parse(stored)); } catch { localStorage.removeItem('nio_admin'); }
-    }
-    setLoading(false);
+    const verifyAdminSession = async () => {
+      const token = localStorage.getItem('nio_admin_token');
+      if (!token) {
+        localStorage.removeItem('nio_admin');
+        setAdmin(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await adminAPI.get('/admin/me');
+        const verifiedAdmin = res.data?.admin
+          ? {
+              id: res.data.admin._id || res.data.admin.id,
+              name: res.data.admin.name,
+              email: res.data.admin.email,
+              role: res.data.admin.role,
+            }
+          : null;
+
+        if (!verifiedAdmin?.id) throw new Error('Invalid admin session');
+
+        setAdmin(verifiedAdmin);
+        localStorage.setItem('nio_admin', JSON.stringify(verifiedAdmin));
+      } catch {
+        localStorage.removeItem('nio_admin_token');
+        localStorage.removeItem('nio_admin');
+        setAdmin(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyAdminSession();
   }, []);
 
   const login = async (email, password) => {
