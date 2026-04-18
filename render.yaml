@@ -30,5 +30,3 @@ services:
         sync: false
       - key: OTP_PROVIDER
         value: mock
-</content>
-</invoke>
