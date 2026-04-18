@@ -72,6 +72,13 @@ export default function AdminProducts() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const maxBytes = 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      toast.error('Image is too large. Max size is 10MB.');
+      e.target.value = '';
+      return;
+    }
+
     setUploading(true);
     try {
       const formData = new FormData();
@@ -98,7 +105,7 @@ export default function AdminProducts() {
 
       toast.success('Image uploaded!');
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || 'Upload failed');
+      toast.error(err.response?.data?.message || err.response?.data?.error || err.message || 'Upload failed');
     } finally {
       setUploading(false);
       e.target.value = '';

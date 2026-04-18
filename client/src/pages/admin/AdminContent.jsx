@@ -131,6 +131,13 @@ export default function AdminContent() {
 
   const handleImageUpload = async (idx, file) => {
     if (!file) return;
+
+    const maxBytes = 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      toast.error('Image is too large. Max size is 10MB.');
+      return;
+    }
+
     setUploadingIdx(idx);
     try {
       const form = new FormData();
@@ -152,8 +159,8 @@ export default function AdminContent() {
       invalidateContentCache(activeTab);
 
       toast.success('Image uploaded & saved!');
-    } catch {
-      toast.error('Image upload failed');
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || err.message || 'Image upload failed');
     } finally {
       setUploadingIdx(null);
     }

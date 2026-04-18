@@ -13,9 +13,54 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const Admin = require('./models/Admin');
+const supabase = require('./config/supabase');
 
 // ─── Connect Database ─────────────────────────────────────────────────────────
 connectDB();
+
+// ─── Ensure Supabase buckets exist/public for image uploads ───────────────────
+const ensureStorageBuckets = async () => {
+  const bucketNames = [
+    process.env.SUPABASE_PRODUCTS_BUCKET || 'products',
+    process.env.SUPABASE_CONTENT_BUCKET || 'content',
+  ];
+
+  for (const bucketName of bucketNames) {
+    const name = (bucketName || '').trim();
+    if (!name) continue;
+
+    try {
+      const { data: existingBucket, error: getErr } = await supabase.storage.getBucket(name);
+
+      if (getErr && !/not found/i.test(getErr.message || '')) {
+        console.error(`Storage bucket check failed for "${name}":`, getErr.message);
+        continue;
+      }
+
+      if (!existingBucket) {
+        const { error: createErr } = await supabase.storage.createBucket(name, { public: true });
+        if (createErr && !/already exists/i.test(createErr.message || '')) {
+          console.error(`Storage bucket create failed for "${name}":`, createErr.message);
+          continue;
+        }
+        console.log(`✅ Storage bucket ready: ${name}`);
+        continue;
+      }
+
+      if (existingBucket.public !== true) {
+        const { error: updateErr } = await supabase.storage.updateBucket(name, { public: true });
+        if (updateErr) {
+          console.error(`Storage bucket update failed for "${name}":`, updateErr.message);
+        } else {
+          console.log(`✅ Storage bucket set to public: ${name}`);
+        }
+      }
+    } catch (err) {
+      console.error(`Storage bucket ensure failed for "${name}":`, err.message || err);
+    }
+  }
+};
+ensureStorageBuckets();
 
 // ─── Init Admin (run once) ────────────────────────────────────────────────────
 const seedAdmin = async () => {
@@ -99,10 +144,17 @@ app.use((req, res) => {
 // ─── Global Error Handler ────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  const statusCode = err.statusCode || 500;
+
+  const isMulterLimit = err?.name === 'MulterError' && err?.code === 'LIMIT_FILE_SIZE';
+  const isImageTypeError = typeof err?.message === 'string' && err.message.includes('Only image files are allowed');
+  const statusCode = err.statusCode || (isMulterLimit || isImageTypeError ? 400 : 500);
+  const message = isMulterLimit
+    ? 'Image is too large. Max size is 10MB.'
+    : (err.message || 'Internal Server Error');
+
   res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal Server Error',
+    message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 });
