@@ -59,8 +59,25 @@ const sendOTPHandler = async (req, res) => {
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
   await OTP.create({ phone, otp, purpose, expiresAt });
-  const { provider } = await sendOTP(phone, otp);
+
+  let sendError = null;
+  let provider = 'mock';
+  try {
+    ({ provider } = await sendOTP(phone, otp));
+  } catch (err) {
+    sendError = err;
+    console.error('WhatsApp OTP send failed:', err.message);
+  }
+
   const usingTwilio = provider === 'twilio' && isTwilioConfigured();
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (isProduction && !usingTwilio) {
+    return res.status(500).json({
+      success: false,
+      message: sendError?.message || 'WhatsApp service is not configured. Please contact support.',
+    });
+  }
 
   const response = {
     success: true,
@@ -71,7 +88,8 @@ const sendOTPHandler = async (req, res) => {
     requiresOTP: true,
   };
 
-  if (!usingTwilio) {
+  // Only expose devOTP in non-production environments
+  if (!usingTwilio && !isProduction) {
     response.devOTP = otp;
   }
 
