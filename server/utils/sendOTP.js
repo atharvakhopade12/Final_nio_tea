@@ -1,88 +1,67 @@
 /**
  * OTP Sender Utility
- * Uses MSG91 when MSG91 env vars are configured,
+ * Sends OTP via Twilio WhatsApp API (no DLT required) when configured,
  * otherwise falls back to development mock mode.
+ *
+ * Required env vars:
+ *   TWILIO_ACCOUNT_SID    — Account SID from Twilio console
+ *   TWILIO_AUTH_TOKEN     — Auth token from Twilio console
+ *   TWILIO_WHATSAPP_FROM  — WhatsApp-enabled number e.g. +14155238886 (sandbox)
+ *                           or your approved Twilio WhatsApp Business number
  */
+
+const twilio = require('twilio');
 
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-const isMSG91Configured = () => {
-  return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID);
+const isTwilioConfigured = () => {
+  return Boolean(
+    process.env.TWILIO_ACCOUNT_SID &&
+    process.env.TWILIO_AUTH_TOKEN &&
+    process.env.TWILIO_WHATSAPP_FROM
+  );
 };
 
-// ─── MSG91 Provider ──────────────────────────────────────────────────────────
-const sendViaMSG91 = async (phone, otp) => {
-  const authKey = process.env.MSG91_AUTH_KEY;
-  const templateId = process.env.MSG91_TEMPLATE_ID;
-  if (!authKey || !templateId) {
-    throw new Error('MSG91 credentials are not configured.');
+// ─── Twilio WhatsApp Provider ─────────────────────────────────────────────────
+const sendViaTwilioWhatsApp = async (phone, otp) => {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken  = process.env.TWILIO_AUTH_TOKEN;
+  const from       = process.env.TWILIO_WHATSAPP_FROM;
+
+  if (!accountSid || !authToken || !from) {
+    throw new Error('Twilio WhatsApp credentials are not configured.');
   }
 
-  const qs = new URLSearchParams({
-    authkey: authKey,
-    template_id: templateId,
-    mobile: `91${phone}`,
-    otp,
+  const client = twilio(accountSid, authToken);
+
+  await client.messages.create({
+    body: `Your Nio Tea verification code is: *${otp}*\n\nValid for 10 minutes. Do not share this with anyone.`,
+    from: `whatsapp:${from}`,
+    to:   `whatsapp:+91${phone}`,
   });
-
-  const resp = await fetch(`https://control.msg91.com/api/v5/otp?${qs.toString()}`, {
-    method: 'POST',
-  });
-
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok || json.type === 'error') {
-    throw new Error(json.message || 'Failed to send OTP via MSG91.');
-  }
-};
-
-const verifyViaMSG91 = async (phone, otp) => {
-  const authKey = process.env.MSG91_AUTH_KEY;
-  if (!authKey) {
-    throw new Error('MSG91 credentials are not configured.');
-  }
-
-  const qs = new URLSearchParams({
-    authkey: authKey,
-    mobile: `91${phone}`,
-    otp,
-  });
-
-  const resp = await fetch(`https://control.msg91.com/api/v5/otp/verify?${qs.toString()}`, {
-    method: 'GET',
-  });
-
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) return { ok: false, message: json.message || 'OTP verification failed.' };
-  if (json.type === 'success') return { ok: true };
-  return { ok: false, message: json.message || 'Invalid OTP.' };
 };
 
 // ─── Mock Provider (Development) ─────────────────────────────────────────────
 const sendViaMock = async (phone, otp) => {
-  console.log(`\n📱 [DEV OTP] Phone: ${phone} → OTP: ${otp}\n`);
-  // In dev mode OTP is also logged and returned — never do this in production
+  console.log(`\n💬 [DEV OTP] WhatsApp → Phone: +91${phone}  OTP: ${otp}\n`);
 };
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
 const sendOTP = async (phone, otp) => {
-  if (isMSG91Configured()) {
-    await sendViaMSG91(phone, otp);
-    return { provider: 'msg91' };
+  if (isTwilioConfigured()) {
+    await sendViaTwilioWhatsApp(phone, otp);
+    return { provider: 'twilio' };
   }
 
   await sendViaMock(phone, otp);
   return { provider: 'mock' };
 };
 
-const verifyOTPWithProvider = async (phone, otp, expectedOtp) => {
-  if (isMSG91Configured()) {
-    return verifyViaMSG91(phone, otp);
-  }
-
-  // Mock/dev fallback: verify with server-stored OTP.
+// OTP is always verified locally against the DB-stored value — no external call needed.
+const verifyOTPWithProvider = async (_phone, otp, expectedOtp) => {
   return { ok: otp === expectedOtp, message: 'Invalid OTP. Please try again.' };
 };
 
-module.exports = { generateOTP, sendOTP, verifyOTPWithProvider, isMSG91Configured };
+module.exports = { generateOTP, sendOTP, verifyOTPWithProvider, isTwilioConfigured };

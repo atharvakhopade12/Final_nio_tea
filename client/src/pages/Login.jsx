@@ -39,7 +39,7 @@ export default function Login() {
 
       setIsNew(res.purpose === 'register');
       if (res.devOTP) setDevOTP(res.devOTP);
-      toast.success(`OTP sent to +91 ${phone}`);
+      toast.success(`OTP sent to your WhatsApp +91 ${phone}`);
       setStep(STEPS.OTP);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send OTP.');
@@ -102,7 +102,7 @@ export default function Login() {
             </div>
             <p className="text-nio-green-200 text-sm mt-1">
               {step === STEPS.PHONE ? 'Sign in to unlock prices' :
-               step === STEPS.OTP ? 'Enter your verification code' :
+               step === STEPS.OTP ? 'Check WhatsApp for your code' :
                'Welcome to Nio Tea!'}
             </p>
           </div>
@@ -133,7 +133,7 @@ export default function Login() {
                         autoFocus
                       />
                     </div>
-                    <p className="text-xs text-gray-400 mt-1.5">We'll send a 6-digit OTP to verify your number.</p>
+                    <p className="text-xs text-gray-400 mt-1.5">We'll send a 6-digit OTP to your <span className="font-medium text-green-600">WhatsApp</span> number.</p>
                   </div>
 
                   {/* Show name field only for new users (detected after first OTP attempt) */}
@@ -175,7 +175,7 @@ export default function Login() {
                 className="px-8 py-8"
               >
                 <p className="text-sm text-gray-500 mb-6 text-center">
-                  OTP sent to <span className="font-semibold text-nio-green-800">+91 {phone}</span>
+                  OTP sent to your WhatsApp <span className="font-semibold text-nio-green-800">+91 {phone}</span>
                 </p>
 
                 {devOTP && (

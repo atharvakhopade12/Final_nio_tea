@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
-const { generateOTP, sendOTP, verifyOTPWithProvider, isMSG91Configured } = require('../utils/sendOTP');
+const { generateOTP, sendOTP, verifyOTPWithProvider, isTwilioConfigured } = require('../utils/sendOTP');
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
@@ -60,18 +60,18 @@ const sendOTPHandler = async (req, res) => {
 
   await OTP.create({ phone, otp, purpose, expiresAt });
   const { provider } = await sendOTP(phone, otp);
-  const usingMSG91 = provider === 'msg91' && isMSG91Configured();
+  const usingTwilio = provider === 'twilio' && isTwilioConfigured();
 
   const response = {
     success: true,
-    message: usingMSG91
-      ? `OTP sent to ${phone}`
-      : `OTP generated for ${phone} (dev mode).`,
+    message: usingTwilio
+      ? `OTP sent to your WhatsApp (+91 ${phone})`
+      : `OTP generated for +91 ${phone} (dev mode).`,
     purpose: 'register',
     requiresOTP: true,
   };
 
-  if (!usingMSG91) {
+  if (!usingTwilio) {
     response.devOTP = otp;
   }
 
