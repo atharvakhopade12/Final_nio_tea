@@ -65,18 +65,18 @@ ensureStorageBuckets();
 // ─── Init Admin (run once) ────────────────────────────────────────────────────
 const seedAdmin = async () => {
   try {
-    const exists = await Admin.findOne({ email: process.env.ADMIN_EMAIL || 'admin@niotea.com' });
+    const email    = process.env.ADMIN_EMAIL    || 'admin@niotea.com';
+    const password = process.env.ADMIN_PASSWORD || 'Admin@123';
+    const exists = await Admin.findOne({ email });
     if (!exists) {
-      await Admin.create({
-        name: 'Super Admin',
-        email: process.env.ADMIN_EMAIL || 'admin@niotea.com',
-        password: process.env.ADMIN_PASSWORD || 'Admin@123',
-        role: 'superadmin',
-      });
+      await Admin.create({ name: 'Admin', email, password, role: 'superadmin' });
       console.log('✅ Admin account seeded.');
+    } else {
+      // Always sync password so it matches configuration on every restart
+      await Admin.updateById(exists._id, {}, { newPassword: password });
+      console.log('✅ Admin password synchronised.');
     }
   } catch (err) {
-    // 23505 = PostgreSQL unique-constraint violation (admin already exists)
     if (err.message && !err.message.includes('23505')) {
       console.error('Admin seed error:', err.message);
     }
@@ -94,6 +94,9 @@ app.use(helmet({
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.ADMIN_URL,
+  // Production fallbacks in case env vars are not set
+  'https://niotea.vercel.app',
+  'https://admin-niotea.vercel.app',
   'http://localhost:5173',
   'http://localhost:5174',
 ].filter(Boolean);
