@@ -179,7 +179,7 @@ INSERT INTO admins (name, email, password, role)
 VALUES (
   'Admin',
   'admin@niotea.com',
-  '$2b$12$kimsU7nyucbRXKD1pOWcXeg/OWB7Ke8PFwO7UYaZl9wSviqRNMtQ2',
+  '$2b$12$eH.ifElVR9AIwS/.pgiRzuk.CjkN.EsYxJVuJDnWYJHKzRUlgJRm2',
   'superadmin'
 )
 ON CONFLICT (email) DO NOTHING;
