@@ -170,3 +170,16 @@ CREATE TABLE IF NOT EXISTS otps (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS otps_phone_idx ON otps (phone);
+
+-- ─── DEFAULT ADMIN SEED ───────────────────────────────────────────────────────
+-- Default superadmin account for Nio Tea admin panel.
+-- Email: admin@niotea.com  |  Password: Admin@123
+-- Password stored as bcrypt hash (cost 12) — never stored in plain text.
+INSERT INTO admins (name, email, password, role)
+VALUES (
+  'Admin',
+  'admin@niotea.com',
+  '$2b$12$kimsU7nyucbRXKD1pOWcXeg/OWB7Ke8PFwO7UYaZl9wSviqRNMtQ2',
+  'superadmin'
+)
+ON CONFLICT (email) DO NOTHING;
